@@ -48,6 +48,8 @@ class RequesttypesController extends AppController {
 	public function add() {
 		if ($this->request->is('post')) {
 			$this->Requesttype->create();
+            print_r($this->request->data);
+            return;
 			if ($this->Requesttype->save($this->request->data)) {
 				$this->Session->setFlash(__('The requesttype has been saved.'));
 				return $this->redirect(array('action' => 'index'));

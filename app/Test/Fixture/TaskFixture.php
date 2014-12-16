@@ -35,8 +35,8 @@ class TaskFixture extends CakeTestFixture {
 			'id' => 1,
 			'title' => 'Lorem ipsum dolor sit amet',
 			'descrption' => 'Lorem ipsum dolor sit amet',
-			'enddate' => '2014-08-25 12:50:20',
-			'created' => '2014-08-25 12:50:20',
+			'enddate' => '2014-11-27 05:56:58',
+			'created' => '2014-11-27 05:56:58',
 			'modified' => 'Lorem ipsum dolor sit amet',
 			'group_id' => 1
 		),

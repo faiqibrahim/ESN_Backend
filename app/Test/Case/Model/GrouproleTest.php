@@ -27,7 +27,6 @@ class GrouproleTest extends CakeTestCase {
 		'app.privacy',
 		'app.content',
 		'app.contenttype',
-		'app.profile',
 		'app.task',
 		'app.solution',
 		'app.contentprivacy',
@@ -37,6 +36,10 @@ class GrouproleTest extends CakeTestCase {
 		'app.role',
 		'app.requesttypes_role',
 		'app.users_role',
+		'app.education',
+		'app.users_education',
+		'app.interest',
+		'app.users_interest',
 		'app.groupprivacy',
 		'app.announcement'
 	);

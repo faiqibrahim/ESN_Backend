@@ -36,7 +36,7 @@ class GroupFixture extends CakeTestFixture {
 			'id' => 1,
 			'title' => 'Lorem ipsum dolor sit amet',
 			'description' => 'Lorem ipsum dolor sit amet',
-			'startdate' => '2014-08-25',
+			'startdate' => '2014-11-27',
 			'created' => 'Lorem ipsum dolor sit amet',
 			'user_id' => 1,
 			'groupprivacy_id' => 1

@@ -48,8 +48,6 @@ class ContactsController extends AppController {
 	public function add() {
 		if ($this->request->is('post')) {
 			$this->Contact->create();
-            print_r($this->request->data);
-            return;
 			if ($this->Contact->save($this->request->data)) {
 				$this->Session->setFlash(__('The contact has been saved.'));
 				return $this->redirect(array('action' => 'index'));

@@ -41,5 +41,7 @@
  * the built-in default routes.
  *
  */
+    Router::mapResources('users');
+    Router::mapResources('interests');
     Router::parseExtensions();
 	require CAKE . 'Config' . DS . 'routes.php';

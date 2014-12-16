@@ -14,7 +14,8 @@ class AnnouncementFixture extends CakeTestFixture {
 		'id' => array('type' => 'integer', 'null' => false, 'default' => null, 'unsigned' => false, 'key' => 'primary'),
 		'title' => array('type' => 'string', 'null' => true, 'default' => null, 'length' => 45, 'collate' => 'utf8_general_ci', 'charset' => 'utf8'),
 		'announcement' => array('type' => 'string', 'null' => true, 'default' => null, 'length' => 100, 'collate' => 'utf8_general_ci', 'charset' => 'utf8'),
-		'made' => array('type' => 'datetime', 'null' => true, 'default' => null),
+		'created' => array('type' => 'datetime', 'null' => true, 'default' => null),
+		'modified' => array('type' => 'datetime', 'null' => true, 'default' => null),
 		'group_id' => array('type' => 'integer', 'null' => false, 'default' => null, 'unsigned' => false, 'key' => 'index'),
 		'indexes' => array(
 			'PRIMARY' => array('column' => 'id', 'unique' => 1),
@@ -33,7 +34,8 @@ class AnnouncementFixture extends CakeTestFixture {
 			'id' => 1,
 			'title' => 'Lorem ipsum dolor sit amet',
 			'announcement' => 'Lorem ipsum dolor sit amet',
-			'made' => '2014-08-25 12:50:04',
+			'created' => '2014-12-13 09:01:47',
+			'modified' => '2014-12-13 09:01:47',
 			'group_id' => 1
 		),
 	);

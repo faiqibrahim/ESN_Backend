@@ -30,13 +30,16 @@ class RoleTest extends CakeTestCase {
 		'app.contenttype',
 		'app.post',
 		'app.privacy',
-		'app.profile',
 		'app.task',
 		'app.solution',
 		'app.contentprivacy',
 		'app.contact',
 		'app.contactrole',
 		'app.message',
+		'app.education',
+		'app.users_education',
+		'app.interest',
+		'app.users_interest',
 		'app.users_role',
 		'app.requesttypes_role'
 	);

@@ -39,6 +39,8 @@ class UsersInterestsControllerTest extends ControllerTestCase {
 		'app.role',
 		'app.requesttypes_role',
 		'app.users_role',
+		'app.education',
+		'app.users_education',
 		'app.interest'
 	);
 

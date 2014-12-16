@@ -36,6 +36,8 @@ class RequesttypesRolesControllerTest extends ControllerTestCase {
 		'app.contact',
 		'app.contactrole',
 		'app.message',
+		'app.education',
+		'app.users_education',
 		'app.interest',
 		'app.users_interest',
 		'app.role',

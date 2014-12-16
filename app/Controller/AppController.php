@@ -45,14 +45,16 @@ class AppController extends Controller
 
     public function beforeFilter()
     {
-        $this->response->header('Access-Control-Allow-Origin', '*');
+        //$this->response->header('Access-Control-Allow-Origin', '*');
         //$this->response->header('Access-Control-Allow-Credentials','true');
-        $this->response->header('Access-Control-Allow-Methods', '*');
+        $this->response->header("Access-Control-Allow-Origin",'http://esn.com');
+        $this->response->header('Access-Control-Allow-Credentials', 'true');
+        $this->response->header('Access-Control-Allow-Methods', 'POST, PUT, GET,DELETE,OPTIONS');
         $this->response->header('Access-Control-Allow-Headers', 'X-Requested-With');
-        $this->response->header('Access-Control-Allow-Headers', 'Content-Type, x-xsrf-token');
+        $this->response->header('Access-Control-Allow-Headers', 'Content-Type, x-xsrf-token, AUTHORIZATION');
         // $this->response->header('Access-Control-Max-Age','172800');
 
-        $this->Auth->allow('index', 'view');
+        $this->Auth->allow('index');
 
     }
 }

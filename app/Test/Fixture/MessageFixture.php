@@ -33,7 +33,7 @@ class MessageFixture extends CakeTestFixture {
 		array(
 			'id' => 1,
 			'message' => 'Lorem ipsum dolor sit amet',
-			'date' => '2014-08-25 12:50:15',
+			'date' => '2014-11-27 05:56:48',
 			'user_id' => 1,
 			'user_id1' => 1
 		),

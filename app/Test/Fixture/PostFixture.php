@@ -35,8 +35,8 @@ class PostFixture extends CakeTestFixture {
 	public $records = array(
 		array(
 			'id' => 1,
-			'created' => '2014-08-25 12:50:16',
-			'modified' => '2014-08-25 12:50:16',
+			'created' => '2014-11-27 05:56:49',
+			'modified' => '2014-11-27 05:56:49',
 			'post' => 'Lorem ipsum dolor sit amet',
 			'user_id' => 1,
 			'privacy_id' => 1,

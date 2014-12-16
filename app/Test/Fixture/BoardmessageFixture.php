@@ -42,7 +42,7 @@ class BoardmessageFixture extends CakeTestFixture {
 			'message' => 'Lorem ipsum dolor sit amet',
 			'group_id' => 1,
 			'user_id' => 1,
-			'generated' => '2014-08-25 12:50:05'
+			'generated' => '2014-11-27 05:56:34'
 		),
 	);
 

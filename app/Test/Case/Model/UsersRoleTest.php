@@ -28,7 +28,6 @@ class UsersRoleTest extends CakeTestCase {
 		'app.contenttype',
 		'app.post',
 		'app.privacy',
-		'app.profile',
 		'app.task',
 		'app.solution',
 		'app.contentprivacy',
@@ -38,7 +37,11 @@ class UsersRoleTest extends CakeTestCase {
 		'app.request',
 		'app.requesttype',
 		'app.role',
-		'app.requesttypes_role'
+		'app.requesttypes_role',
+		'app.education',
+		'app.users_education',
+		'app.interest',
+		'app.users_interest'
 	);
 
 /**

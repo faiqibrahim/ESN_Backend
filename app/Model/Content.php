@@ -45,40 +45,66 @@ class Content extends AppModel {
 			'fields' => '',
 			'order' => ''
 		),
-		'Post' => array(
-			'className' => 'Post',
-			'foreignKey' => 'post_id',
-			'conditions' => '',
-			'fields' => '',
-			'order' => ''
-		),
-		'Task' => array(
-			'className' => 'Task',
-			'foreignKey' => 'task_id',
-			'conditions' => '',
-			'fields' => '',
-			'order' => ''
-		),
-		'Solution' => array(
-			'className' => 'Solution',
-			'foreignKey' => 'solution_id',
-			'conditions' => '',
-			'fields' => '',
-			'order' => ''
-		),
 		'Contentprivacy' => array(
 			'className' => 'Contentprivacy',
 			'foreignKey' => 'contentprivacy_id',
 			'conditions' => '',
 			'fields' => '',
 			'order' => ''
-		),
-		'Groupcontent' => array(
-			'className' => 'Groupcontent',
-			'foreignKey' => 'groupcontent_id',
-			'conditions' => '',
-			'fields' => '',
-			'order' => ''
 		)
 	);
+    public $hasMany = array(
+        'Groupcontent' => array(
+            'className' => 'Groupcontent',
+            'foreignKey' => 'content_id',
+            'dependent' => false,
+            'conditions' => '',
+            'fields' => '',
+            'order' => '',
+            'limit' => '',
+            'offset' => '',
+            'exclusive' => '',
+            'finderQuery' => '',
+            'counterQuery' => ''
+        ),
+        'Post' => array(
+            'className' => 'Post',
+            'foreignKey' => 'content_id',
+            'dependent' => false,
+            'conditions' => '',
+            'fields' => '',
+            'order' => '',
+            'limit' => '',
+            'offset' => '',
+            'exclusive' => '',
+            'finderQuery' => '',
+            'counterQuery' => ''
+        ),
+        'Task' => array(
+            'className' => 'Task',
+            'foreignKey' => 'content_id',
+            'dependent' => false,
+            'conditions' => '',
+            'fields' => '',
+            'order' => '',
+            'limit' => '',
+            'offset' => '',
+            'exclusive' => '',
+            'finderQuery' => '',
+            'counterQuery' => ''
+        ),
+        'Solution' => array(
+            'className' => 'Solution',
+            'foreignKey' => 'content_id',
+            'dependent' => false,
+            'conditions' => '',
+            'fields' => '',
+            'order' => '',
+            'limit' => '',
+            'offset' => '',
+            'exclusive' => '',
+            'finderQuery' => '',
+            'counterQuery' => ''
+        )
+    );
 }

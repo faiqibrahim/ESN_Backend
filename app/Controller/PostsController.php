@@ -25,7 +25,7 @@ class PostsController extends AppController
     public function beforeFilter()
     {
         parent::beforeFilter();
-        $this->Auth->allow('findByUser','findByGroup', 'add', 'delete', 'edit');
+        $this->Auth->allow('findByUser', 'getForUserProfile', 'findByGroup', 'add', 'delete', 'edit', 'getHomePosts');
     }
 
     public function index()
@@ -38,6 +38,102 @@ class PostsController extends AppController
     {
         if ($this->request->is('post') || $this->request->is('get')) {
             $posts = $this->Post->findAllByUserId($id);
+            $result['success'] = true;
+            $result['posts'] = $posts;
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
+        } else {
+            $result['success'] = false;
+            $result['message'] = 'Invalid Request';
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
+        }
+
+    }
+
+    private function addArrayToArray($src_array, $values)
+    {
+        foreach ($values as $value) {
+            array_push($src_array, $value);
+        }
+        return $src_array;
+    }
+
+    private function cmp($a, $b)
+    {
+        $ad = new DateTime($a['Post']['modified']);
+        $bd = new DateTime($b['Post']['modified']);
+
+        if ($ad == $bd) {
+            return 0;
+        }
+
+        return $ad < $bd ? 1 : -1;
+    }
+
+    public function getHomePosts()
+    {
+        if ($this->request->is('post') || $this->request->is('get')) {
+            $user_id = $this->Auth->user('id');
+            $result = array();
+            $result['posts'] = array();
+            if ($user_id != null) {
+                $result['posts'] = $this->addArrayToArray($result['posts'], $this->Post->findAllByUserId($user_id));
+                $followers = $this->Post->User->Contact->find('all', array('conditions' => array('Contact.user_id' => $user_id)));
+                foreach ($followers as $follower) {
+                    $u_id = $follower['User']['id'];
+                    $result['posts'] = $this->addArrayToArray($result['posts'], $this->Post->find('all', array('conditions' => array('Post.user_id' => $u_id, 'Post.group_id' => null))));
+                }
+                $groups = $this->Post->Group->GroupUser->findAllByUserId($user_id);
+                foreach ($groups as $group) {
+                    $group_id = $group['Group']['id'];
+                    $result['posts'] = $this->addArrayToArray($result['posts'], $this->Post->find('all', array('conditions' => array('Post.group_id' => $group_id))));
+                }
+                usort($result['posts'], function ($a, $b) {
+                    $ad = new DateTime($a['Post']['modified']);
+                    $bd = new DateTime($b['Post']['modified']);
+
+                    if ($ad == $bd) {
+                        return 0;
+                    }
+
+                    return $ad < $bd ? 1 : -1;
+                });
+                $result['success'] = true;
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            } else {
+                $result['success'] = false;
+                $result['message'] = 'Not Authorized';
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            }
+        } else {
+            $result['success'] = false;
+            $result['message'] = 'Invalid Request';
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
+
+        }
+
+
+    }
+
+    public function getForUserProfile($id = null)
+    {
+        if ($this->request->is('post') || $this->request->is('get')) {
+            $options = array('conditions' => array('Post.group_id' => null, 'Post.user_id' => $id));
+            $posts = $this->Post->find('all', $options);
             $result['success'] = true;
             $result['posts'] = $posts;
             $this->set(array(
@@ -101,7 +197,7 @@ class PostsController extends AppController
     {
         if ($this->request->is('post')) {
             $this->Post->create();
-            $this->request->data['Post']['user_id']=$this->Auth->user('id');
+            $this->request->data['Post']['user_id'] = $this->Auth->user('id');
 
             if ($this->Post->save($this->request->data)) {
                 $new_post = $this->Post->findById($this->Post->id);

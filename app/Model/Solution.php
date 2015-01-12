@@ -58,28 +58,16 @@ class Solution extends AppModel {
 			'conditions' => '',
 			'fields' => '',
 			'order' => ''
-		)
+		),
+        'Content' => array(
+            'className' => 'Content',
+            'foreignKey' => 'content_id',
+            'conditions' => '',
+            'fields' => '',
+            'order' => ''
+        )
 	);
 
-/**
- * hasMany associations
- *
- * @var array
- */
-	public $hasMany = array(
-		'Content' => array(
-			'className' => 'Content',
-			'foreignKey' => 'solution_id',
-			'dependent' => false,
-			'conditions' => '',
-			'fields' => '',
-			'order' => '',
-			'limit' => '',
-			'offset' => '',
-			'exclusive' => '',
-			'finderQuery' => '',
-			'counterQuery' => ''
-		)
-	);
+
 
 }

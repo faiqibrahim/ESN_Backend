@@ -47,7 +47,14 @@ class Groupcontent extends AppModel {
 			'conditions' => '',
 			'fields' => '',
 			'order' => ''
-		)
+		),
+        'Content' => array(
+            'className' => 'Content',
+            'foreignKey' => 'content_id',
+            'conditions' => '',
+            'fields' => '',
+            'order' => ''
+        )
 	);
 
 /**
@@ -55,20 +62,6 @@ class Groupcontent extends AppModel {
  *
  * @var array
  */
-	public $hasMany = array(
-		'Content' => array(
-			'className' => 'Content',
-			'foreignKey' => 'groupcontent_id',
-			'dependent' => false,
-			'conditions' => '',
-			'fields' => '',
-			'order' => '',
-			'limit' => '',
-			'offset' => '',
-			'exclusive' => '',
-			'finderQuery' => '',
-			'counterQuery' => ''
-		)
-	);
+
 
 }

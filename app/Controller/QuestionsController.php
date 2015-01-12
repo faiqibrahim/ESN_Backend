@@ -1,110 +1,139 @@
 <?php
 App::uses('AppController', 'Controller');
+
 /**
  * Questions Controller
  *
  * @property Question $Question
  * @property PaginatorComponent $Paginator
  */
-class QuestionsController extends AppController {
+class QuestionsController extends AppController
+{
 
-/**
- * Components
- *
- * @var array
- */
-	public $components = array('Paginator');
+    /**
+     * Components
+     *
+     * @var array
+     */
+    public $components = array('Paginator', 'RequestHandler');
 
-/**
- * index method
- *
- * @return void
- */
-	public function index() {
-		$this->Question->recursive = 0;
-		$this->set('questions', $this->Paginator->paginate());
-	}
+    /**
+     * index method
+     *
+     * @return void
+     */
+    public function beforeFilter()
+    {
+        parent::beforeFilter();
+        $this->Auth->allow('add');
+    }
 
-/**
- * view method
- *
- * @throws NotFoundException
- * @param string $id
- * @return void
- */
-	public function view($id = null) {
-		if (!$this->Question->exists($id)) {
-			throw new NotFoundException(__('Invalid question'));
-		}
-		$options = array('conditions' => array('Question.' . $this->Question->primaryKey => $id));
-		$this->set('question', $this->Question->find('first', $options));
-	}
+    public function index()
+    {
+        $this->Question->recursive = 0;
+        $this->set('questions', $this->Paginator->paginate());
+    }
 
-/**
- * add method
- *
- * @return void
- */
-	public function add() {
-		if ($this->request->is('post')) {
-			$this->Question->create();
-			if ($this->Question->save($this->request->data)) {
-				$this->Session->setFlash(__('The question has been saved.'));
-				return $this->redirect(array('action' => 'index'));
-			} else {
-				$this->Session->setFlash(__('The question could not be saved. Please, try again.'));
-			}
-		}
-		$users = $this->Question->User->find('list');
-		$groups = $this->Question->Group->find('list');
-		$this->set(compact('users', 'groups'));
-	}
+    /**
+     * view method
+     *
+     * @throws NotFoundException
+     * @param string $id
+     * @return void
+     */
+    public function view($id = null)
+    {
+        if (!$this->Question->exists($id)) {
+            throw new NotFoundException(__('Invalid question'));
+        }
+        $options = array('conditions' => array('Question.' . $this->Question->primaryKey => $id));
+        $this->set('question', $this->Question->find('first', $options));
+    }
 
-/**
- * edit method
- *
- * @throws NotFoundException
- * @param string $id
- * @return void
- */
-	public function edit($id = null) {
-		if (!$this->Question->exists($id)) {
-			throw new NotFoundException(__('Invalid question'));
-		}
-		if ($this->request->is(array('post', 'put'))) {
-			if ($this->Question->save($this->request->data)) {
-				$this->Session->setFlash(__('The question has been saved.'));
-				return $this->redirect(array('action' => 'index'));
-			} else {
-				$this->Session->setFlash(__('The question could not be saved. Please, try again.'));
-			}
-		} else {
-			$options = array('conditions' => array('Question.' . $this->Question->primaryKey => $id));
-			$this->request->data = $this->Question->find('first', $options);
-		}
-		$users = $this->Question->User->find('list');
-		$groups = $this->Question->Group->find('list');
-		$this->set(compact('users', 'groups'));
-	}
+    /**
+     * add method
+     *
+     * @return void
+     */
+    public function add()
+    {
+        if ($this->request->is('post')) {
+            $this->Question->create();
+            $this->request->data['Question']['user_id'] = $this->Auth->user('id');
+            if ($this->Question->save($this->request->data)) {
+                $result['message'] = 'Question Added.';
+                $result['success'] = true;
+                $result['question'] = $this->Question->findById($this->Question->id);
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            } else {
+                $result['message'] = 'Question could not be added.';
+                $result['success'] = false;
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            }
+        } else {
+            $result['message'] = 'Invalid Request';
+            $result['success'] = false;
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
 
-/**
- * delete method
- *
- * @throws NotFoundException
- * @param string $id
- * @return void
- */
-	public function delete($id = null) {
-		$this->Question->id = $id;
-		if (!$this->Question->exists()) {
-			throw new NotFoundException(__('Invalid question'));
-		}
-		$this->request->allowMethod('post', 'delete');
-		if ($this->Question->delete()) {
-			$this->Session->setFlash(__('The question has been deleted.'));
-		} else {
-			$this->Session->setFlash(__('The question could not be deleted. Please, try again.'));
-		}
-		return $this->redirect(array('action' => 'index'));
-	}
+        }
+    }
+
+    /**
+     * edit method
+     *
+     * @throws NotFoundException
+     * @param string $id
+     * @return void
+     */
+    public function edit($id = null)
+    {
+        if (!$this->Question->exists($id)) {
+            throw new NotFoundException(__('Invalid question'));
+        }
+        if ($this->request->is(array('post', 'put'))) {
+            if ($this->Question->save($this->request->data)) {
+                $this->Session->setFlash(__('The question has been saved.'));
+                return $this->redirect(array('action' => 'index'));
+            } else {
+                $this->Session->setFlash(__('The question could not be saved. Please, try again.'));
+            }
+        } else {
+            $options = array('conditions' => array('Question.' . $this->Question->primaryKey => $id));
+            $this->request->data = $this->Question->find('first', $options);
+        }
+        $users = $this->Question->User->find('list');
+        $groups = $this->Question->Group->find('list');
+        $this->set(compact('users', 'groups'));
+    }
+
+    /**
+     * delete method
+     *
+     * @throws NotFoundException
+     * @param string $id
+     * @return void
+     */
+    public function delete($id = null)
+    {
+        $this->Question->id = $id;
+        if (!$this->Question->exists()) {
+            throw new NotFoundException(__('Invalid question'));
+        }
+        $this->request->allowMethod('post', 'delete');
+        if ($this->Question->delete()) {
+            $this->Session->setFlash(__('The question has been deleted.'));
+        } else {
+            $this->Session->setFlash(__('The question could not be deleted. Please, try again.'));
+        }
+        return $this->redirect(array('action' => 'index'));
+    }
 }

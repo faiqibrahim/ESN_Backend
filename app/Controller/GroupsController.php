@@ -28,6 +28,35 @@ class GroupsController extends AppController
         $this->Auth->allow('add', 'getById');
     }
 
+    public function getUsers($id = null)
+    {
+        if ($this->request->is('post') || $this->request->is('get')) {
+            if (!$this->Group->exists($id)) {
+                $result['message'] = 'Invalid Group';
+                $result['success'] = false;
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            } else {
+                $users=$this->Group->GroupUser->findAllByGroupId($id);
+                $result['users'] = $users;
+                $result['success'] = true;
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            }
+        } else {
+            $result['message'] = 'Invalid Request';
+            $result['success'] = false;
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
+        }
+
+    }
     public function getById($id = null)
     {
         if ($this->request->is('post') || $this->request->is('get')) {

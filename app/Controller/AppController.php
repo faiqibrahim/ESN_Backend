@@ -39,22 +39,25 @@ class AppController extends Controller
                 'Form' => array(
                     'passwordHasher' => 'Blowfish'
                 )
-            )
+            ),
+            'authorize' => array('Controller')
         )
+
     );
 
     public function beforeFilter()
     {
-        //$this->response->header('Access-Control-Allow-Origin', '*');
-        //$this->response->header('Access-Control-Allow-Credentials','true');
-        $this->response->header("Access-Control-Allow-Origin",'http://esn.com');
-        $this->response->header('Access-Control-Allow-Credentials', 'true');
-        $this->response->header('Access-Control-Allow-Methods', 'POST, PUT, GET,DELETE,OPTIONS');
-        $this->response->header('Access-Control-Allow-Headers', 'X-Requested-With');
-        $this->response->header('Access-Control-Allow-Headers', 'Content-Type, x-xsrf-token, AUTHORIZATION');
-        // $this->response->header('Access-Control-Max-Age','172800');
 
+        $this->response->header('Access-Control-Allow-Headers', 'Content-Type,X-Requested-With x-xsrf-token, Authorization');
+        $this->response->header("Access-Control-Allow-Origin", 'http://esn.com');
+        $this->response->header('Access-Control-Allow-Credentials', 'true');
+        $this->response->header('Access-Control-Allow-Methods', 'POST, PUT, GET,DELETE');
         $this->Auth->allow('index');
 
+    }
+
+    public function isAuthorized($user)
+    {
+        return true;
     }
 }

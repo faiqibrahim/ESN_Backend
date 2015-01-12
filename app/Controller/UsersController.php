@@ -37,7 +37,7 @@ class UsersController extends AppController
     {
         parent::beforeFilter();
         // Allow users to register and logout.
-        $this->Auth->allow('add', 'edit', 'logout', 'checkUsername', 'checkEmail', 'login', 'isLoggedIn', 'addProfilePhoto', 'addCoverPhoto', 'deleteInterest','addInterest');
+        $this->Auth->allow('add', 'addContact', 'edit', 'logout', 'deleteContact', 'checkUsername', 'checkEmail', 'login', 'isLoggedIn', 'addProfilePhoto', 'addCoverPhoto', 'deleteInterest', 'addInterest');
     }
 
     public function isLoggedin()
@@ -79,10 +79,53 @@ class UsersController extends AppController
             ));
         }
     }
+    /*
+    public function login() {
+        if ($this->Session->read('Auth.User')) {
+            $this->set(array(
+                'message' => array(
+                    'text' => __('You are logged in!'),
+                    'type' => 'error'
+                ),
+                '_serialize' => array('message')
+            ));
+        }
 
+        if ($this->request->is('get')) {
+            if ($this->Auth->login()) {
+                // return $this->redirect($this->Auth->redirect());
+                $this->set(array(
+                    'user' => $this->Session->read('Auth.User'),
+                    '_serialize' => array('user')
+                ));
+            } else {
+                $this->set(array(
+                    'message' => array(
+                        'text' => __('Invalid username or password, try again'),
+                        'type' => 'error'
+                    ),
+                    '_serialize' => array('message')
+                ));
+                $this->response->statusCode(401);
+            }
+        }
+    }*/
+    /*
+        public function logout()
+        {
+            return $this->redirect($this->Auth->logout());
+        }*/
     public function logout()
     {
-        return $this->redirect($this->Auth->logout());
+        if ($this->Auth->logout()) {
+            $this->set(array(
+                'message' => array(
+                    'text' => __('Logout successfully'),
+                    'type' => 'info'
+                ),
+                '_serialize' => array('message')
+            ));
+        }
     }
 
     /**
@@ -327,24 +370,36 @@ class UsersController extends AppController
                     'result' => $result,
                     '_serialize' => array('result')
                 ));
+
+            } else {
+                if ($this->Auth->user('id') == $id) {
+                    if ($this->User->save($this->request->data)) {
+                        //
+                        $result['success'] = true;
+                        $result['message'] = 'The user has been saved';
+                        $this->set(array(
+                            'result' => $result,
+                            '_serialize' => array('result')
+                        ));
+                    } else {
+                        $result['success'] = false;
+                        $result['message'] = 'The user has not been saved';
+                        $this->set(array(
+                            'result' => $result,
+                            '_serialize' => array('result')
+                        ));
+                    }
+                } else {
+                    $result['success'] = false;
+                    $result['message'] = 'You are not authorized to perform this action';
+                    $this->set(array(
+                        'result' => $result,
+                        '_serialize' => array('result')
+                    ));
+                }
             }
 
-            if ($this->User->save($this->request->data)) {
-                //
-                $result['success'] = true;
-                $result['message'] = 'The user has been saved';
-                $this->set(array(
-                    'result' => $result,
-                    '_serialize' => array('result')
-                ));
-            } else {
-                $result['success'] = false;
-                $result['message'] = 'The user has not been saved';
-                $this->set(array(
-                    'result' => $result,
-                    '_serialize' => array('result')
-                ));
-            }
+
         } else {
             $result['success'] = false;
             $result['message'] = 'Invalid request type';
@@ -388,6 +443,40 @@ class UsersController extends AppController
 
     }
 
+    public function deleteContact($username = null)
+    {
+        if ($this->request->is('delete')) {
+            $user = $this->User->findByUsername($username);
+            $id = $user['User']['id'];
+            if ($this->User->Contact->deleteAll(array('Contact.user_id' => $this->Auth->user('id'), 'Contact.user_id1' => $id))) {
+                $result['success'] = true;
+                $result['message'] = 'Connection Deleted';
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+
+            } else {
+                $result['success'] = false;
+                $result['message'] = 'Connection could not be deleted';
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+
+            }
+        } else {
+            $result['success'] = false;
+            $result['message'] = 'Invalid request type';
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
+        }
+
+
+    }
+
     public function addInterest()
     {
         if ($this->request->is('post')) {
@@ -397,6 +486,143 @@ class UsersController extends AppController
             $this->User->UsersInterest->saveAll(array('user_id' => $user_id, 'interest_id' => $interest_id));
             $result['success'] = true;
             $result['message'] = 'Interest Added';
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
+
+        } else {
+            $result['success'] = false;
+            $result['message'] = 'Invalid request type';
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
+        }
+    }
+
+    public function addContact()
+    {
+        if ($this->request->is('post')) {
+
+            $user_id = $this->request->data('user_id');
+            $user = $this->User->findByUsername($this->request->data['username']);
+            $user_id1 = $user['User']['id'];
+            if ($this->User->Contact->saveAll(array('user_id' => $user_id, 'user_id1' => $user_id1, 'contactrole_id' => '1'))) {
+                $result['success'] = true;
+                $result['message'] = 'Contact established';
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            } else {
+                $result['success'] = false;
+                $result['message'] = 'Contact could not be established';
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            };
+
+
+        } else {
+            $result['success'] = false;
+            $result['message'] = 'Invalid request type';
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
+        }
+    }
+
+    public function getConnectionsTo()
+    {
+        if ($this->request->is('post') || $this->request->is('get')) {
+            $options = array('conditions' => array('Contact.user_id1' => $this->Auth->user('id')));
+
+            $users = $this->User->Contact->find('all', $options);
+            $result_users = array();
+            for ($i = 0; $i < sizeof($users); $i++) {
+                array_push($result_users, $this->User->findById($users[$i]['Contact']['user_id']));
+            }
+            $result['success'] = true;
+            $result['connections'] = $result_users;
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
+        } else {
+            $result['success'] = false;
+            $result['message'] = 'Invalid request type';
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
+        }
+    }
+
+    public function getConnectionsFrom()
+    {
+        if ($this->request->is('post') || $this->request->is('get')) {
+            $options = array('conditions' => array('Contact.user_id' => $this->Auth->user('id')));
+            $users = $this->User->Contact->find('all', $options);
+
+            $result['success'] = true;
+            $result['connections'] = $users;
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
+        } else {
+            $result['success'] = false;
+            $result['message'] = 'Invalid request type';
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
+        }
+    }
+
+    public function areConnected($user_id = null)
+    {
+        if ($this->request->is('post') || $this->request->is('get')) {
+            $options = array('conditions' => array('Contact.user_id' => $this->Auth->user('id'), 'Contact.user_id1' => $user_id));
+            $users = $this->User->Contact->find('first', $options);
+            if (sizeof($users) > 0) {
+                $result['success'] = true;
+                $result['message'] = 'Contact established';
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            } else {
+                $result['success'] = false;
+                $result['message'] = 'Contact is not established';
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            };
+
+
+        } else {
+            $result['success'] = false;
+            $result['message'] = 'Invalid request type';
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
+        }
+    }
+
+    public function getJoinedGroups($username = null)
+    {
+        if ($this->request->is('post') || $this->request->is('get')) {
+            $user = $this->User->findByUsername($username);
+            $user_id = $user['User']['id'];
+            $groups = $this->User->Group->GroupUser->findAllByUserId($user_id);
+            $result['success'] = true;
+            $result['groups'] = $groups;
             $this->set(array(
                 'result' => $result,
                 '_serialize' => array('result')

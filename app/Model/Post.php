@@ -66,29 +66,17 @@ class Post extends AppModel {
 			'conditions' => '',
 			'fields' => '',
 			'order' => ''
-		)
+		),
+        'Content' => array(
+            'className' => 'Content',
+            'foreignKey' => 'content_id',
+            'conditions' => '',
+            'fields' => '',
+            'order' => ''
+        )
 	);
 
-/**
- * hasMany associations
- *
- * @var array
- */
-	public $hasMany = array(
-		'Content' => array(
-			'className' => 'Content',
-			'foreignKey' => 'post_id',
-			'dependent' => false,
-			'conditions' => '',
-			'fields' => '',
-			'order' => '',
-			'limit' => '',
-			'offset' => '',
-			'exclusive' => '',
-			'finderQuery' => '',
-			'counterQuery' => ''
-		)
-	);
+
     public function save($data = null, $validate = true, $fieldList = array()) {
         // Clear modified field value before each save
         $this->set($data);

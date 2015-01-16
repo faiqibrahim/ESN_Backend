@@ -20,7 +20,7 @@ class GroupcontentsController extends AppController
     public function beforeFilter()
     {
         parent::beforeFilter();
-        $this->Auth->allow('add','delete');
+        $this->Auth->allow('add', 'delete', 'getByGroup');
     }
 
     /**
@@ -37,6 +37,7 @@ class GroupcontentsController extends AppController
     public function getByGroup($id = null)
     {
         if ($this->request->is('post') || $this->request->is('get')) {
+
             if (!$this->Groupcontent->Group->exists($id)) {
                 $result['message'] = 'Invalid Group';
                 $result['success'] = false;
@@ -45,14 +46,34 @@ class GroupcontentsController extends AppController
                     '_serialize' => array('result')
                 ));
             } else {
-                $content = $this->Groupcontent->findAllByGroupId($id);
+                $authorized = false;
+                $owner_id = $this->Groupcontent->Group->findById($id)['Group']['user_id'];
+                if ($owner_id != null && $owner_id == $this->Auth->user('id')) {
+                    $authorized = true;
+                } else {
+                    $options = array('conditions' => array('GroupUser.user_id' => $this->Auth->user('id'), 'GroupUser.group_id' => $id));
+                    $check = $this->Groupcontent->Group->GroupUser->find('first', $options);
+                    if ($check != null) {
+                        $authorized = true;
+                    }
+                }
+                if ($authorized) {
+                    $content = $this->Groupcontent->findAllByGroupId($id);
 
-                $result['group_contents'] = $content;
-                $result['success'] = true;
-                $this->set(array(
-                    'result' => $result,
-                    '_serialize' => array('result')
-                ));
+                    $result['group_contents'] = $content;
+                    $result['success'] = true;
+                    $this->set(array(
+                        'result' => $result,
+                        '_serialize' => array('result')
+                    ));
+                } else {
+                    $result['message'] = 'You are not authorized to perform this action';
+                    $result['success'] = false;
+                    $this->set(array(
+                        'result' => $result,
+                        '_serialize' => array('result')
+                    ));
+                }
             }
         } else {
             $result['message'] = 'Invalid Request';
@@ -64,6 +85,7 @@ class GroupcontentsController extends AppController
         }
     }
 
+
     /**
      * view method
      *
@@ -71,7 +93,8 @@ class GroupcontentsController extends AppController
      * @param string $id
      * @return void
      */
-    public function view($id = null)
+    public
+    function view($id = null)
     {
         if (!$this->Groupcontent->exists($id)) {
             throw new NotFoundException(__('Invalid groupcontent'));
@@ -85,7 +108,8 @@ class GroupcontentsController extends AppController
      *
      * @return void
      */
-    public function add()
+    public
+    function add()
     {
         if ($this->request->is('post')) {
             $this->Groupcontent->create();
@@ -123,7 +147,8 @@ class GroupcontentsController extends AppController
      * @param string $id
      * @return void
      */
-    public function edit($id = null)
+    public
+    function edit($id = null)
     {
         if (!$this->Groupcontent->exists($id)) {
             throw new NotFoundException(__('Invalid groupcontent'));
@@ -162,7 +187,12 @@ class GroupcontentsController extends AppController
                     '_serialize' => array('result')
                 ));
             } else {
-                if ($this->Groupcontent->delete()) {
+                $authorized = false;
+                $owner_id = $this->Groupcontent->findById($id)['Group']['user_id'];
+                if ($owner_id != null && $owner_id == $this->Auth->user('id')) {
+                    $authorized = true;
+                }
+                if ($authorized && $this->Groupcontent->delete()) {
                     $result['success'] = true;
                     $result['message'] = 'The content has been deleted';
                     $this->set(array(

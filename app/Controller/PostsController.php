@@ -37,13 +37,23 @@ class PostsController extends AppController
     public function findByUser($id = null)
     {
         if ($this->request->is('post') || $this->request->is('get')) {
-            $posts = $this->Post->findAllByUserId($id);
-            $result['success'] = true;
-            $result['posts'] = $posts;
-            $this->set(array(
-                'result' => $result,
-                '_serialize' => array('result')
-            ));
+            if ($this->Auth->user('id') != null) {
+                $posts = $this->Post->findAllByUserId($id);
+                $result['success'] = true;
+                $result['posts'] = $posts;
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            } else {
+                $result['success'] = false;
+                $result['message'] = 'You are not authorized to perform this action';
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            }
+
         } else {
             $result['success'] = false;
             $result['message'] = 'Invalid Request';
@@ -63,17 +73,6 @@ class PostsController extends AppController
         return $src_array;
     }
 
-    private function cmp($a, $b)
-    {
-        $ad = new DateTime($a['Post']['modified']);
-        $bd = new DateTime($b['Post']['modified']);
-
-        if ($ad == $bd) {
-            return 0;
-        }
-
-        return $ad < $bd ? 1 : -1;
-    }
 
     public function getHomePosts()
     {
@@ -132,14 +131,35 @@ class PostsController extends AppController
     public function getForUserProfile($id = null)
     {
         if ($this->request->is('post') || $this->request->is('get')) {
-            $options = array('conditions' => array('Post.group_id' => null, 'Post.user_id' => $id));
-            $posts = $this->Post->find('all', $options);
-            $result['success'] = true;
-            $result['posts'] = $posts;
-            $this->set(array(
-                'result' => $result,
-                '_serialize' => array('result')
-            ));
+            if ($this->Auth->user('id') != null) {
+                $options = array('conditions' => array('Post.group_id' => null, 'Post.user_id' => $id));
+                $posts = $this->Post->find('all', $options);
+                $result['success'] = true;
+                $result['posts'] = $posts;
+                usort($result['posts'], function ($a, $b) {
+                    $ad = new DateTime($a['Post']['created']);
+                    $bd = new DateTime($b['Post']['created']);
+
+                    if ($ad == $bd) {
+                        return 0;
+                    }
+
+                    return $ad < $bd ? 1 : -1;
+                });
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            } else {
+                $result['success'] = false;
+                $result['posts'] = null;
+                $result['message'] = 'You are not authorized to perform this action';
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            }
+
         } else {
             $result['success'] = false;
             $result['message'] = 'Invalid Request';
@@ -154,13 +174,35 @@ class PostsController extends AppController
     public function findByGroup($id = null)
     {
         if ($this->request->is('post') || $this->request->is('get')) {
-            $posts = $this->Post->findAllByGroupId($id);
-            $result['success'] = true;
-            $result['posts'] = $posts;
-            $this->set(array(
-                'result' => $result,
-                '_serialize' => array('result')
-            ));
+            $authorized = false;
+            $user_id = $this->Auth->user('id');
+
+            $owner_id = $this->Post->Group->findById($id)['Group']['user_id'];
+
+            if ($user_id == $owner_id) {
+                $authorized = true;
+            }
+            $temp = $this->Post->Group->GroupUser->find('first', array('conditions' => array('GroupUser.user_id' => $user_id, 'GroupUser.group_id' => $id)));
+            if (sizeof($temp) > 0) {
+                $authorized = true;
+            }
+            if ($authorized) {
+                $posts = $this->Post->findAllByGroupId($id);
+                $result['success'] = true;
+                $result['posts'] = $posts;
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            } else {
+                $result['success'] = false;
+                $result['message'] = 'You are not authorized to perform this action';
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            }
+
         } else {
             $result['success'] = false;
             $result['message'] = 'Invalid Request';
@@ -244,21 +286,32 @@ class PostsController extends AppController
                     '_serialize' => array('result')
                 ));
             } else {
-                if ($this->Post->save($this->request->data)) {
-                    $result['success'] = true;
-                    $result['message'] = 'Post has been saved';
-                    $this->set(array(
-                        'result' => $result,
-                        '_serialize' => array('result')
-                    ));
+                if ($this->Post->findById($id)['Post']['user_id'] == $this->Auth->user('id')) {
+                    if ($this->Post->save($this->request->data)) {
+                        $result['success'] = true;
+                        $result['post'] = $this->Post->findById($id);
+                        $result['message'] = 'Post has been saved';
+                        $this->set(array(
+                            'result' => $result,
+                            '_serialize' => array('result')
+                        ));
+                    } else {
+                        $result['success'] = false;
+                        $result['message'] = 'Post could not be saved';
+                        $this->set(array(
+                            'result' => $result,
+                            '_serialize' => array('result')
+                        ));
+                    }
                 } else {
                     $result['success'] = false;
-                    $result['message'] = 'Post could not be saved';
+                    $result['message'] = 'You are not authorized to perform this action';
                     $this->set(array(
                         'result' => $result,
                         '_serialize' => array('result')
                     ));
                 }
+
 
             }
         } else {
@@ -290,21 +343,31 @@ class PostsController extends AppController
                     '_serialize' => array('result')
                 ));
             } else {
-                if ($this->Post->delete()) {
-                    $result['success'] = true;
-                    $result['message'] = 'The post has been deleted';
-                    $this->set(array(
-                        'result' => $result,
-                        '_serialize' => array('result')
-                    ));
+                if ($this->Post->findById($id)['Post']['user_id'] == $this->Auth->user('id')) {
+                    if ($this->Post->delete()) {
+                        $result['success'] = true;
+                        $result['message'] = 'The post has been deleted';
+                        $this->set(array(
+                            'result' => $result,
+                            '_serialize' => array('result')
+                        ));
+                    } else {
+                        $result['success'] = false;
+                        $result['message'] = 'The post could not be deleted';
+                        $this->set(array(
+                            'result' => $result,
+                            '_serialize' => array('result')
+                        ));
+                    }
                 } else {
                     $result['success'] = false;
-                    $result['message'] = 'The post could not be deleted';
+                    $result['message'] = 'You are not authorized to perform this action';
                     $this->set(array(
                         'result' => $result,
                         '_serialize' => array('result')
                     ));
                 }
+
             }
 
         } else {

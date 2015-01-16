@@ -232,7 +232,7 @@ class UsersController extends AppController
         }
     }
 
-    function make_thumb($src, $dest, $desired_width, $desired_height)
+    private function make_thumb($src, $dest, $desired_width, $desired_height)
     {
 
         /* read the source image */
@@ -289,22 +289,37 @@ class UsersController extends AppController
 
     public function addProfilePhoto()
     {
-        $result = $this->savePhoto();
+        if ($this->Auth->user('id') != null) {
+            $result = $this->savePhoto();
 
-        $this->set(array(
-            'result' => $result,
-            '_serialize' => array('result')
-        ));
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
+        } else {
+            $this->set(array(
+                'result' => array('success' => false, 'message' => 'You are not Authorized to perform this action'),
+                '_serialize' => array('result')
+            ));
+        }
+
     }
 
     public function addCoverPhoto()
     {
-        $result = $this->savePhoto('900', '500', 'coverPhoto');
+        if ($this->Auth->user('id') != null) {
+            $result = $this->savePhoto('900', '500', 'coverPhoto');
 
-        $this->set(array(
-            'result' => $result,
-            '_serialize' => array('result')
-        ));
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
+        } else {
+            $this->set(array(
+                'result' => array('success' => false, 'message' => 'You are not Authorized to perform this action'),
+                '_serialize' => array('result')
+            ));
+        }
     }
 
     public function add()
@@ -480,16 +495,48 @@ class UsersController extends AppController
     public function addInterest()
     {
         if ($this->request->is('post')) {
+            $user_id = $this->Auth->user('id');
+            if ($user_id != null) {
+                $interest_id = $this->request->data('interest_id');
+                $options = array(
+                    'conditions' => array(
+                        'UsersInterest.user_id' => $user_id,
+                        'UsersInterest.interest_id' => $interest_id
+                    ));
+                $this->User->id = $user_id;
+                $tmp = $this->User->Interest->findById($interest_id);
+                $add = true;
+                foreach ($tmp['User'] as $_user) {
+                    if ($_user['id'] == $user_id) {
+                        $add = false;
+                        break;
+                    }
+                }
+                if ($add) {
+                    $this->User->UsersInterest->saveAll(array('user_id' => $user_id, 'interest_id' => $interest_id));
+                    $result['success'] = true;
+                    $result['message'] = $tmp;
+                    $this->set(array(
+                        'result' => $result,
+                        '_serialize' => array('result')
+                    ));
+                } else {
+                    $result['success'] = false;
+                    $result['message'] = 'Interest already exists';
+                    $this->set(array(
+                        'result' => $result,
+                        '_serialize' => array('result')
+                    ));
+                }
 
-            $interest_id = $this->request->data('interest_id');
-            $user_id = $this->request->data('user_id');
-            $this->User->UsersInterest->saveAll(array('user_id' => $user_id, 'interest_id' => $interest_id));
-            $result['success'] = true;
-            $result['message'] = 'Interest Added';
-            $this->set(array(
-                'result' => $result,
-                '_serialize' => array('result')
-            ));
+            } else {
+                $result['success'] = false;
+                $result['message'] = 'You are not authorized to perform this action';
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            }
 
         } else {
             $result['success'] = false;
@@ -508,7 +555,7 @@ class UsersController extends AppController
             $user_id = $this->request->data('user_id');
             $user = $this->User->findByUsername($this->request->data['username']);
             $user_id1 = $user['User']['id'];
-            if ($this->User->Contact->saveAll(array('user_id' => $user_id, 'user_id1' => $user_id1, 'contactrole_id' => '1'))) {
+            if ($this->User->Contact->saveAll(array('user_id' => $this->Auth->user('id'), 'user_id1' => $user_id1, 'contactrole_id' => '1'))) {
                 $result['success'] = true;
                 $result['message'] = 'Contact established';
                 $this->set(array(

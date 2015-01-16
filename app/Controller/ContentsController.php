@@ -61,18 +61,20 @@ class ContentsController extends AppController
 
             $data = array();
 
-            if (isset($_FILES)) {
+            if (isset($_FILES) && sizeof($_FILES) > 0) {
+
                 $error = false;
                 $files = array();
                 $filePath = APP . 'webroot' . DS . 'files' . DS;
-                $user_info=$this->Auth->user('id').'_';
+                $user_info = $this->Auth->user('id') . '_';
                 foreach ($_FILES as $file) {
-                    if (move_uploaded_file($file['tmp_name'], $filePath .$user_info. basename($file['name']))) {
-                        $src = 'http://esnback.com/app/webroot/files/' .$user_info. $file['name'];
+
+                    if (move_uploaded_file($file['tmp_name'], $filePath . $user_info . basename($file['name']))) {
+                        $src = 'http://esnback.com/app/webroot/files/' . $user_info . $file['name'];
                         return array('success' => true, 'filePath' => $src);
 
                     } else {
-                        return array('success' => false, 'error' => $file['error']);
+                        return array('success' => false, 'error' => 'Could not move file');
                     }
                 }
             } else {
@@ -85,54 +87,64 @@ class ContentsController extends AppController
 
     public function uploadFile()
     {
-        $savePath = $this->saveFile();
-        $contentPath = null;
+        if ($this->Auth->user('id') != null) {
+            $savePath = $this->saveFile();
+            $contentPath = null;
 
-        if ($savePath['success']) {
+            if ($savePath['success']) {
 
-            $contentPath = $savePath['filePath'];
-            $options = array('conditions' => array('Content.content' => $contentPath));
-            $existing_content = $this->Content->find('first', $options);
+                $contentPath = $savePath['filePath'];
+                $options = array('conditions' => array('Content.content' => $contentPath));
+                $existing_content = $this->Content->find('first', $options);
 
-            if (isset($existing_content['Content']['content'])) {
-                $existing_id = $existing_content['Content']['id'];
-                $result['success'] = true;
-                $result['content_id'] = $existing_id;
-                $result['content_path'] = $existing_content['Content']['content'];
-                $this->set(array(
-                    'result' => $result,
-                    '_serialize' => array('result')
-                ));
-            } else {
-                $data['Content']['content'] = $contentPath;
-                $data['Content']['contenttype_id'] = '3';
-                if ($this->Content->save($data)) {
+                if (isset($existing_content['Content']['content'])) {
+                    $existing_id = $existing_content['Content']['id'];
                     $result['success'] = true;
-                    $result['content_id'] = $this->Content->id;
-                    $result['content_path'] = $contentPath;
+                    $result['content_id'] = $existing_id;
+                    $result['content_path'] = $existing_content['Content']['content'];
                     $this->set(array(
                         'result' => $result,
                         '_serialize' => array('result')
                     ));
                 } else {
-                    $result['success'] = false;
-                    $result['message'] = 'Could not save content';
-                    $this->set(array(
-                        'result' => $result,
-                        '_serialize' => array('result')
-                    ));
+                    $data['Content']['content'] = $contentPath;
+                    $data['Content']['contenttype_id'] = '3';
+                    if ($this->Content->save($data)) {
+                        $result['success'] = true;
+                        $result['content_id'] = $this->Content->id;
+                        $result['content_path'] = $contentPath;
+                        $this->set(array(
+                            'result' => $result,
+                            '_serialize' => array('result')
+                        ));
+                    } else {
+                        $result['success'] = false;
+                        $result['message'] = 'Could not save content';
+                        $this->set(array(
+                            'result' => $result,
+                            '_serialize' => array('result')
+                        ));
+                    }
                 }
+
+
+            } else {
+                $result['success'] = false;
+                $result['message'] = 'Error, '.$savePath['error'];
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
             }
-
-
         } else {
             $result['success'] = false;
-            $result['message'] = 'Could not upload content';
+            $result['message'] = 'You are not authorized to perform this action';
             $this->set(array(
                 'result' => $result,
                 '_serialize' => array('result')
             ));
         }
+
     }
 
     /**

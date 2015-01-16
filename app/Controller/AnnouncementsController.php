@@ -26,7 +26,7 @@ class AnnouncementsController extends AppController
     public function beforeFilter()
     {
         parent::beforeFilter();
-        $this->Auth->allow('add','delete');
+        $this->Auth->allow('add', 'delete');
     }
 
     public function index()
@@ -59,24 +59,35 @@ class AnnouncementsController extends AppController
     public function add()
     {
         if ($this->request->is('post')) {
-            $this->Announcement->create();
+            $user_id = $this->Announcement->Group->findById($this->request->data['Announcement']['group_id'])['User']['id'];
+            if ($user_id != null && $user_id == $this->Auth->user('id')) {
+                $this->Announcement->create();
 
-            if ($this->Announcement->save($this->request->data)) {
-                $result['message'] = 'Announcement Added.';
-                $result['success'] = true;
-                $result['announcement'] = $this->Announcement->findById($this->Announcement->id);
-                $this->set(array(
-                    'result' => $result,
-                    '_serialize' => array('result')
-                ));
+                if ($this->Announcement->save($this->request->data)) {
+                    $result['message'] = 'Announcement Added.';
+                    $result['success'] = true;
+                    $result['announcement'] = $this->Announcement->findById($this->Announcement->id);
+                    $this->set(array(
+                        'result' => $result,
+                        '_serialize' => array('result')
+                    ));
+                } else {
+                    $result['message'] = 'Announcement could not be added.';
+                    $result['success'] = false;
+                    $this->set(array(
+                        'result' => $result,
+                        '_serialize' => array('result')
+                    ));
+                }
             } else {
-                $result['message'] = 'Announcement could not be added.';
+                $result['message'] = 'You are not authorized to perform this action';
                 $result['success'] = false;
                 $this->set(array(
                     'result' => $result,
                     '_serialize' => array('result')
                 ));
             }
+
         } else {
             $result['message'] = 'Invalid Request';
             $result['success'] = false;
@@ -87,7 +98,6 @@ class AnnouncementsController extends AppController
 
         }
     }
-
 
 
     /**
@@ -136,21 +146,32 @@ class AnnouncementsController extends AppController
                     '_serialize' => array('result')
                 ));
             } else {
-                if ($this->Announcement->delete()) {
-                    $result['message'] = 'Announcement Deleted';
-                    $result['success'] = true;
-                    $this->set(array(
-                        'result' => $result,
-                        '_serialize' => array('result')
-                    ));
+                $user_id = $this->Announcement->Group->findById($this->request->data['Announcement']['group_id'])['User']['id'];
+                if ($user_id != null && $user_id == $this->Auth->user('id')) {
+                    if ($this->Announcement->delete()) {
+                        $result['message'] = 'Announcement Deleted';
+                        $result['success'] = true;
+                        $this->set(array(
+                            'result' => $result,
+                            '_serialize' => array('result')
+                        ));
+                    } else {
+                        $result['message'] = 'The announcement could not be deleted. Please, try again.';
+                        $result['success'] = true;
+                        $this->set(array(
+                            'result' => $result,
+                            '_serialize' => array('result')
+                        ));
+                    }
                 } else {
-                    $result['message'] = 'The announcement could not be deleted. Please, try again.';
-                    $result['success'] = true;
+                    $result['message'] = 'You are not authorized to perform this action';
+                    $result['success'] = false;
                     $this->set(array(
                         'result' => $result,
                         '_serialize' => array('result')
                     ));
                 }
+
             }
 
         } else {

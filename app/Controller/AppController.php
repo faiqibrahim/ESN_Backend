@@ -47,10 +47,9 @@ class AppController extends Controller
 
     public function beforeFilter()
     {
-
-        $this->response->header('Access-Control-Allow-Headers', 'Content-Type,X-Requested-With x-xsrf-token, Authorization');
         $this->response->header("Access-Control-Allow-Origin", 'http://esn.com');
         $this->response->header('Access-Control-Allow-Credentials', 'true');
+        $this->response->header('Access-Control-Allow-Headers', 'Origin, Authorization, X-Requested-With, Content-Type, Accept');
         $this->response->header('Access-Control-Allow-Methods', 'POST, PUT, GET,DELETE');
         $this->Auth->allow('index');
 

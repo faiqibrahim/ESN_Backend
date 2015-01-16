@@ -53,13 +53,40 @@ class AnswersController extends AppController
     public function findByQuestion($id = null)
     {
         if ($this->request->is('post') || $this->request->is('get')) {
-            $answers = $this->Answer->findAllByQuestionId($id);
-            $result['success'] = true;
-            $result['answers'] = $answers;
-            $this->set(array(
-                'result' => $result,
-                '_serialize' => array('result')
-            ));
+            $temp_data = $this->Answer->Question->findById($id);
+
+            $group_id = $temp_data['Group']['id'];
+            $owner_id = $temp_data['Group']['user_id'];
+
+            $authorized = false;
+
+            if ($owner_id == $this->Auth->user('id')) {
+                $authorized = true;
+            } else {
+                $options = array('conditions' => array('GroupUser.user_id' => $this->Auth->user('id'), 'GroupUser.group_id' => $group_id));
+                $user_id = $this->Answer->Question->Group->GroupUser->find('first', $options)['User']['id'];
+                if ($user_id != null) {
+                    $authorized = true;
+                }
+            }
+
+            if ($authorized) {
+                $answers = $this->Answer->findAllByQuestionId($id);
+                $result['success'] = true;
+                $result['answers'] = $answers;
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            } else {
+                $result['success'] = false;
+                $result['message'] = 'You are not authorized to perform this action';
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            }
+
         } else {
             $result['success'] = false;
             $result['message'] = 'Invalid Request';
@@ -79,24 +106,39 @@ class AnswersController extends AppController
     public function add()
     {
         if ($this->request->is('post')) {
-            $this->Answer->create();
-            $this->request->data['Answer']['user_id'] = $this->Auth->user('id');
-            if ($this->Answer->save($this->request->data)) {
-                $result['message'] = 'Answer Added.';
-                $result['success'] = true;
-                $result['answer'] = $this->Answer->findById($this->Answer->id);
-                $this->set(array(
-                    'result' => $result,
-                    '_serialize' => array('result')
-                ));
+            $authorized = false;
+            $user_id = $this->Answer->Question->findById($this->request->data['Answer']['question_id'])['Group']['user_id'];
+            if ($user_id != null && $user_id == $this->Auth->user('id')) {
+                $authorized = true;
+            }
+            if ($authorized) {
+                $this->Answer->create();
+                $this->request->data['Answer']['user_id'] = $this->Auth->user('id');
+                if ($this->Answer->save($this->request->data)) {
+                    $result['message'] = 'Answer Added.';
+                    $result['success'] = true;
+                    $result['answer'] = $this->Answer->findById($this->Answer->id);
+                    $this->set(array(
+                        'result' => $result,
+                        '_serialize' => array('result')
+                    ));
+                } else {
+                    $result['message'] = 'Answer could not be added.';
+                    $result['success'] = false;
+                    $this->set(array(
+                        'result' => $result,
+                        '_serialize' => array('result')
+                    ));
+                }
             } else {
-                $result['message'] = 'Answer could not be added.';
+                $result['message'] = 'You are not authorized to perform this action.';
                 $result['success'] = false;
                 $this->set(array(
                     'result' => $result,
                     '_serialize' => array('result')
                 ));
             }
+
         } else {
             $result['message'] = 'Invalid Request';
             $result['success'] = false;

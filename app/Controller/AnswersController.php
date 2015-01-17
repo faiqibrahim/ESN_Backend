@@ -107,9 +107,20 @@ class AnswersController extends AppController
     {
         if ($this->request->is('post')) {
             $authorized = false;
-            $user_id = $this->Answer->Question->findById($this->request->data['Answer']['question_id'])['Group']['user_id'];
-            if ($user_id != null && $user_id == $this->Auth->user('id')) {
+            $question_id = $this->request->data['Answer']['question_id'];
+            $temp = $this->Answer->Question->findById($question_id);
+            $group_id = $temp['Group']['id'];
+            $owner_id = $temp['Group']['user_id'];
+            $user_id = $this->Auth->user('id');
+            if ($owner_id != null && $user_id == $owner_id) {
                 $authorized = true;
+            }
+            if (!$authorized) {
+                $options = array('conditions' => array('GroupUser.group_id' => $group_id, 'GroupUser.user_id' => $user_id));
+                $group = $this->Answer->Question->Group->GroupUser->find('first', $options);
+                if (isset($group['User'])) {
+                    $authorized = true;
+                }
             }
             if ($authorized) {
                 $this->Answer->create();

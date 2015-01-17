@@ -31,7 +31,26 @@ class TasksController extends AppController
     public function beforeFilter()
     {
         parent::beforeFilter();
-        $this->Auth->allow('add', 'delete', 'getByGroup');
+        $this->Auth->allow('add', 'delete', 'getByGroup', 'getTime');
+    }
+
+    public function getTime()
+    {
+        if ($this->request->is('get')) {
+            $result['server_time'] = new DateTime();
+            $result['success'] = true;
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
+        } else {
+            $result['message'] = 'Invalid Request';
+            $result['success'] = false;
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
+        }
     }
 
     public function getByGroup($id = null)
@@ -45,7 +64,12 @@ class TasksController extends AppController
                     '_serialize' => array('result')
                 ));
             } else {
-                $tasks = $this->Task->findAllByGroupId($id);
+                $options = array(
+                    'conditions' => array('Task.group_id' => $id),
+                    'order' => array('Task.created' => 'DESC')
+                );
+
+                $tasks = $this->Task->find('all', $options);
                 $options = array('conditions' => array('Task.group_id' => $id, 'Solution.user_id' => $this->Auth->user('id')));
                 $solution = $this->Task->Solution->find('all', $options);
                 for ($i = 0; $i < sizeof($tasks); $i++) {
@@ -56,7 +80,7 @@ class TasksController extends AppController
                             $tasks[$i]['Solution'] = $solution;
                             break;
                         } else {
-                            unset( $tasks[$i]['Solution'][$j]);
+                            unset($tasks[$i]['Solution'][$j]);
 
                         }
 

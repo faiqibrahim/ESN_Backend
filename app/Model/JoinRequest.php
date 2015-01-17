@@ -2,13 +2,13 @@
 App::uses('AppModel', 'Model');
 
 /**
- * Solution Model
+ * GroupUser Model
  *
- * @property Task $Task
+ * @property Group $Group
  * @property User $User
- * @property Content $Content
+ * @property Grouprole $Grouprole
  */
-class Solution extends AppModel
+class JoinRequest extends AppModel
 {
 
     /**
@@ -17,7 +17,7 @@ class Solution extends AppModel
      * @var array
      */
     public $validate = array(
-        'task_id' => array(
+        'group_id' => array(
             'numeric' => array(
                 'rule' => array('numeric'),
                 //'message' => 'Your custom message here',
@@ -36,7 +36,7 @@ class Solution extends AppModel
                 //'last' => false, // Stop validation after this rule
                 //'on' => 'create', // Limit validation to 'create' or 'update' operations
             ),
-        ),
+        )
     );
 
     //The Associations below have been created with all possible keys, those that are not needed can be removed
@@ -47,9 +47,9 @@ class Solution extends AppModel
      * @var array
      */
     public $belongsTo = array(
-        'Task' => array(
-            'className' => 'Task',
-            'foreignKey' => 'task_id',
+        'Group' => array(
+            'className' => 'Group',
+            'foreignKey' => 'group_id',
             'conditions' => '',
             'fields' => '',
             'order' => ''
@@ -60,42 +60,6 @@ class Solution extends AppModel
             'conditions' => '',
             'fields' => '',
             'order' => ''
-        ),
-        'Content' => array(
-            'className' => 'Content',
-            'foreignKey' => 'content_id',
-            'conditions' => '',
-            'fields' => '',
-            'order' => ''
         )
     );
-
-    public function saveData($data = null)
-    {
-        if ($data == null) {
-            return $this->save($data);
-        } else {
-            if (isset($data['Solution']['task_id'])) {
-                $task_id = $data['Solution']['task_id'];
-                $dt = new DateTime();
-                $time_now = $dt->format('Y-m-d H:i:s');
-                $this->Task->id = $task_id;
-                if ($this->Task->exists()) {
-                    $task_end_date = $this->Task->findById($task_id)['Task']['enddate'];
-                    if ($time_now > $task_end_date) {
-                        return false;
-                    } else {
-                        return $this->save($data);
-                    }
-                } else {
-                    return $this->save($data);
-
-                }
-            } else {
-                return $this->save($data);
-            }
-        }
-    }
-
-
 }

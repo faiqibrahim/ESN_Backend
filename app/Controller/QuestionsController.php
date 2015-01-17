@@ -25,13 +25,58 @@ class QuestionsController extends AppController
     public function beforeFilter()
     {
         parent::beforeFilter();
-        $this->Auth->allow('add');
+        $this->Auth->allow('add', 'getByGroup');
     }
 
     public function index()
     {
         $this->Question->recursive = 0;
         $this->set('questions', $this->Paginator->paginate());
+    }
+
+    public function getByGroup($id = null)
+    {
+        if ($this->request->is('post') || $this->request->is('get')) {
+            $authorized = false;
+            $user_id = $this->Auth->user('id');
+
+            $owner_id = $this->Question->Group->findById($id)['Group']['user_id'];
+
+            if ($user_id == $owner_id) {
+                $authorized = true;
+            }
+            $temp = $this->Question->Group->GroupUser->find('first', array('conditions' => array('GroupUser.user_id' => $user_id, 'GroupUser.group_id' => $id)));
+            if (sizeof($temp) > 0) {
+                $authorized = true;
+            }
+            if ($authorized) {
+                $options = array(
+                    'conditions' => array('Question.group_id' => $id),
+                    'order' => array('Question.created' => 'DESC'));
+                $posts = $this->Question->find('all', $options);
+                $result['success'] = true;
+                $result['questions'] = $posts;
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            } else {
+                $result['success'] = false;
+                $result['message'] = 'You are not authorized to perform this action';
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            }
+
+        } else {
+            $result['success'] = false;
+            $result['message'] = 'Invalid Request';
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
+        }
     }
 
     /**

@@ -20,7 +20,7 @@ class GroupUsersController extends AppController
     public function beforeFilter()
     {
         parent::beforeFilter();
-        $this->Auth->allow('add','delete');
+        $this->Auth->allow('add', 'delete', 'deleteRequest');
     }
 
     /**
@@ -58,17 +58,47 @@ class GroupUsersController extends AppController
     public function add()
     {
         if ($this->request->is('post')) {
-            $this->GroupUser->create();
-            $this->request->data['grouprole_id'] = 2;
-            if ($this->GroupUser->save($this->request->data)) {
-                $result['message'] = 'User Added.';
-                $result['success'] = true;
-                $this->set(array(
-                    'result' => $result,
-                    '_serialize' => array('result')
-                ));
+            $group_id = $this->request->data['group_id'];
+            $group_privacy = $this->GroupUser->Group->findById($group_id)['Groupprivacy']['privacy'];
+            if ($group_privacy == 'public') {
+                $this->GroupUser->create();
+                $this->request->data['grouprole_id'] = 2;
+                if ($this->GroupUser->save($this->request->data)) {
+                    $result['added'] = true;
+                    $result['requested'] = false;
+                    $result['success'] = true;
+                    $this->set(array(
+                        'result' => $result,
+                        '_serialize' => array('result')
+                    ));
+                } else {
+                    $result['message'] = 'User could not be added.';
+                    $result['success'] = false;
+                    $this->set(array(
+                        'result' => $result,
+                        '_serialize' => array('result')
+                    ));
+                }
+            } else if ($group_privacy == 'private') {
+                $this->GroupUser->Group->JoinRequest->create();
+                if ($this->GroupUser->Group->JoinRequest->save($this->request->data)) {
+                    $result['added'] = false;
+                    $result['requested'] = true;
+                    $result['success'] = true;
+                    $this->set(array(
+                        'result' => $result,
+                        '_serialize' => array('result')
+                    ));
+                } else {
+                    $result['message'] = 'User request could not be made.';
+                    $result['success'] = false;
+                    $this->set(array(
+                        'result' => $result,
+                        '_serialize' => array('result')
+                    ));
+                }
             } else {
-                $result['message'] = 'User could not be added.';
+                $result['message'] = 'Invalid Group Privacy';
                 $result['success'] = false;
                 $this->set(array(
                     'result' => $result,
@@ -92,7 +122,8 @@ class GroupUsersController extends AppController
      * @param string $id
      * @return void
      */
-    public function edit($id = null)
+    public
+    function edit($id = null)
     {
         if (!$this->GroupUser->exists($id)) {
             throw new NotFoundException(__('Invalid group user'));
@@ -134,6 +165,36 @@ class GroupUsersController extends AppController
             } else {
                 $result['success'] = false;
                 $result['message'] = 'Group could not be Unjoined';
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+
+            }
+        } else {
+            $result['success'] = false;
+            $result['message'] = 'Invalid request type';
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
+        }
+    }
+
+    public function deleteRequest($id)
+    {
+        if ($this->request->is('delete')) {
+            if ($this->GroupUser->Group->JoinRequest->deleteAll(array('JoinRequest.user_id' => $this->Auth->user('id'), 'JoinRequest.group_id' => $id))) {
+                $result['success'] = true;
+                $result['message'] = 'Request removed';
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+
+            } else {
+                $result['success'] = false;
+                $result['message'] = 'Could not remove request';
                 $this->set(array(
                     'result' => $result,
                     '_serialize' => array('result')

@@ -187,7 +187,10 @@ class PostsController extends AppController
                 $authorized = true;
             }
             if ($authorized) {
-                $posts = $this->Post->findAllByGroupId($id);
+                $options = array(
+                    'conditions' => array('Post.group_id' => $id),
+                    'order' => array('Post.created' => 'DESC'));
+                $posts = $this->Post->find('all', $options);
                 $result['success'] = true;
                 $result['posts'] = $posts;
                 $this->set(array(

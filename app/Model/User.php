@@ -139,6 +139,19 @@ class User extends AppModel
             'finderQuery' => '',
             'counterQuery' => ''
         ),
+        'JoinRequest' => array(
+            'className' => 'JoinRequest',
+            'foreignKey' => 'user_id',
+            'dependent' => false,
+            'conditions' => '',
+            'fields' => '',
+            'order' => '',
+            'limit' => '',
+            'offset' => '',
+            'exclusive' => '',
+            'finderQuery' => '',
+            'counterQuery' => ''
+        ),
         'Message' => array(
             'className' => 'Message',
             'foreignKey' => 'user_id',
@@ -158,7 +171,7 @@ class User extends AppModel
             'dependent' => false,
             'conditions' => '',
             'fields' => '',
-            'order' => '',
+            'order' => array('Post.created'=>'DESC'),
             'limit' => '',
             'offset' => '',
             'exclusive' => '',

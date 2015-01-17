@@ -54,8 +54,82 @@ class Chat extends AppModel
         )
     );
 
+    public function getSummary($user_id = null)
+    {
+        if ($user_id == null) {
+            return null;
+        }
+        $chats_users = $this->ChatsUser->findAllByUserId($user_id);
+        $chat_ids = array();
+        foreach ($chats_users as $chatUser) {
+            array_push($chat_ids, $chatUser['ChatsUser']['chat_id']);
+        }
+        $chat_ids;
+        $chats = $this->find('all', array(
+            'conditions' => array('Chat.id' => $chat_ids)
+        ));
+        $results = array();
+        $i = 0;
+        foreach ($chats as $chat) {
+            if (sizeof($chat['Message']) != 0) {
+                $_message = $chat['Message'][sizeof($chat['Message']) - 1];
+                $message = substr($_message['message'], 0, 20) . ' ...';
+                $_message['message'] = $message;
+                $results[$i]['Message'] = $_message;
+            }
+            $results[$i]['Chat'] = $chat['Chat'];
+            if (isset($chat['User']) && sizeof($chat['User']) == 2) {
+                if ($chat['User'][0]['id'] == $user_id) {
+                    $contact = $chat['User'][1];
+                    $user = $chat['User'][0];
+                    $results[$i]['User'] = $user;
+                    $results[$i]['Contact'] = $contact;
+                } else {
+                    $user = $chat['User'][1];
+                    $contact = $chat['User'][0];
+                    $results[$i]['User'] = $user;
+                    $results[$i]['Contact'] = $contact;
+                }
+            }
+
+            $i++;
+        }
+        return $results;
+
+    }
+
+    private function _getChatId($_users)
+    {
+
+        $users = $this->removeDuplicates($_users);
+        $size = sizeof($users);
+        if ($size > 1) {
+            $options = array();
+            $options['fields'] = array('ChatsUser.chat_id', 'COUNT(ChatsUser.chat_id) as Total');
+            $options['conditions'] = array('ChatsUser.user_id' => $users);
+            $options['group'] = array("ChatsUser.chat_id HAVING Total = $size");
+            $result = $this->ChatsUser->find('all', $options);
+            if (sizeof($result) != 0) {
+                return $result[0]['ChatsUser']['chat_id'];
+            } else {
+                $this->create();
+                $user['User'] = array();
+                $i = 0;
+                foreach ($users as $_user) {
+                    $user['User'][$i] = $_user;
+                }
+                $data['User'] = $user;
+                $this->save($data);
+                return $this->id;
+            }
+        } else {
+            return null;
+        }
+    }
+
     private function getChatId($user_id, $contact_id)
     {
+
         $db = $this->getDataSource();
         $chat_id = $db->fetchAll("SELECT chat_id from chats_users where user_id=? OR user_id=? group by chat_id having count(chat_id)=?",
             array($user_id, $contact_id, 2));
@@ -76,6 +150,7 @@ class Chat extends AppModel
 
     public function getChat($user_id = null, $contact_username = null)
     {
+
         $result_messages = array();
         $contact = $this->Message->User->findByUsername($contact_username);
         if (sizeof($contact) == 0) {
@@ -86,6 +161,7 @@ class Chat extends AppModel
         if ($user_id == $contact_id) {
             return null;
         }
+        $this->_getChatId(array($user_id, $contact_id));
         if ($contact_id != null && $user_id != null) {
             $chat_id = $this->getChatId($user_id, $contact_id);
 
@@ -122,6 +198,7 @@ class Chat extends AppModel
             return null;
         }
     }
+
     public function loadNext($data = null, $user_id = null)
     {
         if (!isset($data['Chat']['id']) || !isset($data['Message']['last_message']['id']) || $user_id == null) {
@@ -257,4 +334,4 @@ class Chat extends AppModel
         $options = array('MessagesUser.message_id' => $message_id, 'MessagesUser.user_id' => $user_id);
         return $this->Message->MessagesUser->deleteAll($options);
     }
-} 
+}

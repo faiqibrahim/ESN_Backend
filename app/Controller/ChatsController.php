@@ -25,7 +25,7 @@ class ChatsController extends AppController
     public function beforeFilter()
     {
         parent::beforeFilter();
-        $this->Auth->allow('addMessage', 'getChat', 'loadPrevious', 'loadNext', 'deleteMessage');
+        $this->Auth->allow('addMessage', 'getChat', 'loadPrevious', 'loadNext', 'deleteMessage', 'getSummary');
     }
 
     public function loadPrevious()
@@ -118,6 +118,44 @@ class ChatsController extends AppController
                     ));
                 } else {
                     $result['message'] = "Invalid Arguments";
+                    $result['success'] = false;
+                    $this->set(array(
+                        'result' => $result,
+                        '_serialize' => array('result')
+                    ));
+                }
+            } else {
+                $result['message'] = 'You are not authorized to perform this action';
+                $result['success'] = false;
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            }
+        } else {
+            $result['message'] = 'Invalid Request';
+            $result['success'] = false;
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
+        }
+    }
+
+    public function getSummary()
+    {
+        if ($this->request->is('post') || $this->request->is('get')) {
+            if ($this->Auth->user('id') != null) {
+                $msg = $this->Chat->getSummary($this->Auth->user('id'));
+                if ($msg != null) {
+                    $result['summary'] = $msg;
+                    $result['success'] = true;
+                    $this->set(array(
+                        'result' => $result,
+                        '_serialize' => array('result')
+                    ));
+                } else {
+                    $result['message'] = "No summary found";
                     $result['success'] = false;
                     $this->set(array(
                         'result' => $result,

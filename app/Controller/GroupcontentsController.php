@@ -58,7 +58,10 @@ class GroupcontentsController extends AppController
                     }
                 }
                 if ($authorized) {
-                    $content = $this->Groupcontent->findAllByGroupId($id);
+                    $options = array(
+                        'conditions' => array('Groupcontent.group_id' => $id),
+                        'order' => array('Groupcontent.created' => 'DESC'));
+                    $content = $this->Groupcontent->find('all', $options);
 
                     $result['group_contents'] = $content;
                     $result['success'] = true;

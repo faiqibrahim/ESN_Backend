@@ -30,4 +30,19 @@ App::uses('Model', 'Model');
  * @package       app.Model
  */
 class AppModel extends Model {
+    public function removeDuplicates($array)
+    {
+        if (sizeof($array) > 0) {
+            $result = array();
+            $key = array();
+            foreach ($array as $item) {
+                if (!isset($key[$item])) {
+                    array_push($result, $item);
+                }
+            }
+            return $result;
+        } else {
+            return array();
+        }
+    }
 }

@@ -26,7 +26,7 @@ class AnnouncementsController extends AppController
     public function beforeFilter()
     {
         parent::beforeFilter();
-        $this->Auth->allow('add', 'delete');
+        $this->Auth->allow('add', 'delete', 'getByGroup');
     }
 
     public function index()
@@ -49,6 +49,51 @@ class AnnouncementsController extends AppController
         }
         $options = array('conditions' => array('Announcement.' . $this->Announcement->primaryKey => $id));
         $this->set('announcement', $this->Announcement->find('first', $options));
+    }
+
+    public function getByGroup($id = null)
+    {
+        if ($this->request->is('post') || $this->request->is('get')) {
+            $authorized = false;
+            $user_id = $this->Auth->user('id');
+
+            $owner_id = $this->Announcement->Group->findById($id)['Group']['user_id'];
+
+            if ($user_id == $owner_id) {
+                $authorized = true;
+            }
+            $temp = $this->Announcement->Group->GroupUser->find('first', array('conditions' => array('GroupUser.user_id' => $user_id, 'GroupUser.group_id' => $id)));
+            if (sizeof($temp) > 0) {
+                $authorized = true;
+            }
+            if ($authorized) {
+                $options = array(
+                    'conditions' => array('Announcement.group_id' => $id),
+                    'order' => array('Announcement.created' => 'DESC'));
+                $posts = $this->Announcement->find('all', $options);
+                $result['success'] = true;
+                $result['announcements'] = $posts;
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            } else {
+                $result['success'] = false;
+                $result['message'] = 'You are not authorized to perform this action';
+                $this->set(array(
+                    'result' => $result,
+                    '_serialize' => array('result')
+                ));
+            }
+
+        } else {
+            $result['success'] = false;
+            $result['message'] = 'Invalid Request';
+            $this->set(array(
+                'result' => $result,
+                '_serialize' => array('result')
+            ));
+        }
     }
 
     /**
@@ -146,7 +191,7 @@ class AnnouncementsController extends AppController
                     '_serialize' => array('result')
                 ));
             } else {
-                $user_id = $this->Announcement->Group->findById($this->request->data['Announcement']['group_id'])['User']['id'];
+                $user_id = $this->Announcement->findById($id)['Group']['user_id'];
                 if ($user_id != null && $user_id == $this->Auth->user('id')) {
                     if ($this->Announcement->delete()) {
                         $result['message'] = 'Announcement Deleted';

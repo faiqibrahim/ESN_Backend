@@ -59,7 +59,7 @@ class SolutionsController extends AppController
     {
         if ($this->request->is('post')) {
             $this->Solution->create();
-            if ($this->Solution->save($this->request->data)) {
+            if ($this->Solution->saveData($this->request->data)) {
                 $result['message'] = 'Solution Successfully submitted.';
                 $result['solution'] = $this->Solution->findById($this->Solution->id);
                 $result['solution_id'] = $result['solution']['Solution']['id'];
@@ -150,7 +150,7 @@ class SolutionsController extends AppController
             return;
         }
         if ($this->request->is(array('post', 'put'))) {
-            if ($this->Solution->save($this->request->data)) {
+            if ($this->Solution->saveData($this->request->data)) {
                 $result['message'] = 'Solution Updated.';
                 $result['solution_id'] = $id;
                 $result['success'] = true;
